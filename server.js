@@ -21,6 +21,7 @@ app.post("/face", upload.single("image"), (req, res) => {
   var api_url = "https://openapi.naver.com/v1/vision/celebrity"; // 유명인 인식
   //var api_url = 'https://openapi.naver.com/v1/vision/face'; // 얼굴 감지
 
+  console.log(req.file.filename);
   var _formData = {
     image: "image",
     image: fs.createReadStream(__dirname + "/upload/" + req.file.filename) // FILE 이름

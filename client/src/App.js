@@ -6,7 +6,6 @@ class App extends Component {
     super(props);
     this.state = {
       file: "",
-      fileName: "",
       similar: "",
       percent: "",
       nobody: false
@@ -20,23 +19,29 @@ class App extends Component {
   handleFormSubmit(e) {
     e.preventDefault();
 
-    this.handleFetch().then(response => {
-      if (response.data.info.faceCount === 0) {
-        this.setState({
-          nobody: true
+    if (this.state.file !== "") {
+      this.handleFetch()
+        .then(response => {
+          if (response.data.info.faceCount === 0) {
+            this.setState({
+              nobody: true,
+              similar: ""
+            });
+          } else {
+            this.setState({
+              similar: response.data.faces[0].celebrity.value,
+              percent: response.data.faces[0].celebrity.confidence * 100
+            });
+          }
+        })
+        .catch(error => {
+          alert(error.response.data.errorMessage);
         });
-      } else {
-        this.setState({
-          similar: response.data.faces[0].celebrity.value,
-          percent: response.data.faces[0].celebrity.confidence * 100
-        });
-      }
-    });
+    }
   }
 
   handleFetch() {
     const url = "/face";
-
     const formData = new FormData();
 
     formData.append("image", this.state.file);
@@ -51,19 +56,23 @@ class App extends Component {
   }
 
   handleFileChange(e) {
-    if (e.target.files[0].size > 1024 * 1024 * 2) {
-      // 용량 초과시 경고후 해당 파일의 용량도 보여줌
-      alert(
-        "2MB 이하 파일만 등록할 수 있습니다.\n\n" +
-          "현재파일 용량 : " +
-          Math.round((e.target.files[0].size / 1024 / 1024) * 100) / 100 +
-          "MB"
-      );
+    if (typeof e.target.files[0] !== "undefined") {
+      if (e.target.files[0].size > 1024 * 1024 * 2) {
+        // 용량 초과시 경고후 해당 파일의 용량도 보여줌
+        alert(
+          "2MB 이하 파일만 등록할 수 있습니다.\n\n" +
+            "현재파일 용량 : " +
+            Math.round((e.target.files[0].size / 1024 / 1024) * 100) / 100 +
+            "MB"
+        );
+      } else {
+        this.setState({
+          file: e.target.files[0]
+        });
+      }
     } else {
       this.setState({
-        file: e.target.files[0],
-
-        fileName: e.target.value
+        file: ""
       });
     }
   }
@@ -77,11 +86,9 @@ class App extends Component {
             type="file"
             name="file"
             file={this.state.file}
-            value={this.state.fileName}
             onChange={this.handleFileChange}
           />
-
-          <button type="submit">보기</button>
+          {this.state.file !== "" ? <button type="submit">보기</button> : null}
         </form>
         {this.state.nobody ? "닮은 사람이 없네요" : null}
         {this.state.similar
